@@ -83,3 +83,61 @@ test('it can output custom message function', function(assert) {
 
   assert.equal(validator(key, 'abc'), 'some test message', 'custom message function is returned correctly');
 });
+
+module('custom message builder', function() {
+  function customMessageBuilder(key, type, newValue, options) {
+    return `${key}_${type}_${!!newValue}_${JSON.stringify(options)}`;
+  }
+
+  test('it accepts a `min` option', function(assert) {
+    let key = 'firstName';
+    let options = { min: 1 };
+    let validator = validateLength(options);
+
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'tooShort', '', options));
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it accepts a `max` option', function(assert) {
+    let key = 'firstName';
+    let options = { max: 1 };
+    let validator = validateLength(options);
+
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'ab', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'tooLong', 'ab', options));
+  });
+
+  test('it accepts a `min` and `max` option', function(assert) {
+    let key = 'firstName';
+    let options = { min: 1, max: 3 };
+    let validator = validateLength(options);
+
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'between', '', options));
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'ab', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'abc', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'abcd', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'between', true, options));
+  });
+
+  test('it accepts an `is` option', function(assert) {
+    let key = 'firstName';
+    let options = { is: 2 };
+    let validator = validateLength(options);
+
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'wrongLength', true, options));
+    assert.equal(validator(key, 'ab', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'abc', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'wrongLength', true, options));
+  });
+
+  test('it accepts an `allowBlank` option', function(assert) {
+    let key = 'firstName';
+    let options = { allowBlank: true };
+    let validator = validateLength(options);
+
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, null, undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, undefined, undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+});

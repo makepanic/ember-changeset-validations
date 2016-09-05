@@ -21,59 +21,60 @@ function _isInteger(value) {
   return typeOf(value) === 'number' && isFinite(value) && Math.floor(value) === value;
 }
 
-function _validateType(type, opts, numValue, key) {
+function _validateType(type, opts, numValue) {
   let expected = opts[type];
 
   if (type === 'is' && numValue !== expected) {
-    return buildMessage(key, 'equalTo', numValue, opts);
+    return 'equalTo';
   } else if (type === 'lt' && numValue >= expected) {
-    return buildMessage(key, 'lessThan', numValue, opts);
+    return 'lessThan';
   } else if (type === 'lte' && numValue > expected) {
-    return buildMessage(key, 'lessThanOrEqualTo', numValue, opts);
+    return 'lessThanOrEqualTo';
   } else if (type === 'gt' && numValue <= expected) {
-    return buildMessage(key, 'greaterThan', numValue, opts);
+    return 'greaterThan';
   } else if (type === 'gte' && numValue < expected) {
-    return buildMessage(key, 'greaterThanOrEqualTo', numValue, opts);
+    return 'greaterThanOrEqualTo';
   } else if (type === 'positive' && numValue < 0) {
-    return buildMessage(key, 'positive', numValue, opts);
+    return 'positive';
   } else if (type === 'odd' && numValue % 2 === 0) {
-    return buildMessage(key, 'odd', numValue, opts);
+    return 'odd';
   } else if (type === 'even' && numValue % 2 !== 0) {
-    return buildMessage(key, 'even', numValue, opts);
+    return 'even';
   } else if (type === 'multipleOf' && !_isInteger(numValue / expected)) {
-    return buildMessage(key, 'multipleOf', numValue, opts);
+    return 'multipleOf';
   }
 
   return true;
 }
 
 export default function validateNumber(options = {}) {
-  return (key, value) => {
+  return (key, value, _, __, validatorOptions = {}) => {
     let numValue = Number(value);
     let optKeys = keys(options);
+    const _buildMessage = validatorOptions.buildMessage ? validatorOptions.buildMessage : buildMessage;
 
     if (options.allowBlank && isEmpty(value)) {
       return true;
     }
 
     if (typeof(value) === 'string' && isEmpty(value)) {
-      return buildMessage(key, 'notANumber', value, options);
+      return _buildMessage(key, 'notANumber', value, options);
     }
 
     if(!_isNumber(numValue)) {
-      return buildMessage(key, 'notANumber', value, options);
+      return _buildMessage(key, 'notANumber', value, options);
     }
 
     if(isPresent(options.integer) && !_isInteger(numValue)) {
-      return buildMessage(key, 'notAnInteger', value, options);
+      return _buildMessage(key, 'notAnInteger', value, options);
     }
 
     for (let i = 0; i < optKeys.length; i++) {
       let type = optKeys[i];
-      let m = _validateType(type, options, numValue, key);
+      let messageKey = _validateType(type, options, numValue);
 
-      if (typeof m === 'string') {
-        return m;
+      if (typeof messageKey === 'string') {
+        return _buildMessage(key, messageKey, numValue, options);
       }
     }
 

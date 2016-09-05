@@ -106,3 +106,41 @@ test('it passes the original object into validators', function(assert) {
   changesetInstance.set('lastName', 'McDerpface');
   assert.ok(changesetInstance.get('isValid'), 'should be valid if content is passed into validator');
 });
+
+module('custom message builder', function() {
+  function customMessageBuilder(key, type, newValue, options) {
+    return `${key}_${type}_${!!newValue}_${JSON.stringify(options)}`;
+  }
+
+  test('it composes validations and uses custom validation messages', function(assert) {
+    let User = EmberObject.extend({
+      firstName: null,
+      lastName: null
+    });
+    let user = User.create();
+    let userValidations = {
+      firstName: [
+        validatePresence(true),
+        validateLength({ min: 1, max: 8 })
+      ],
+      lastName: validatePresence(true)
+    };
+    let changesetInstance = changeset([user, userValidations], {validatorOptions: {buildMessage: customMessageBuilder}});
+
+    changesetInstance.set('firstName', 'helloworldjimbob');
+    assert.deepEqual(changesetInstance.get('error.firstName.validation'), ['firstName_between_true_{\"min\":1,\"max\":8}']);
+    assert.ok(changesetInstance.get('isInvalid'), 'should be invalid with wrong length first name');
+
+    changesetInstance.set('firstName', '');
+    assert.deepEqual(changesetInstance.get('error.firstName.validation'), ["firstName_present_false_{}", 'firstName_between_false_{\"min\":1,\"max\":8}']);
+    assert.ok(changesetInstance.get('isInvalid'), 'should be invalid with blank first name');
+
+    changesetInstance.set('lastName', '');
+    assert.deepEqual(changesetInstance.get('error.lastName.validation'), ["lastName_present_false_{}"]);
+    assert.ok(changesetInstance.get('isInvalid'), 'should be invalid with blank last name');
+
+    changesetInstance.set('firstName', 'Jim');
+    changesetInstance.set('lastName', 'Bob');
+    assert.ok(changesetInstance.get('isValid'), 'should be valid after setting valid first and last names');
+  });
+});

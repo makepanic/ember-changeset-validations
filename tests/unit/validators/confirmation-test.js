@@ -53,3 +53,21 @@ test('it can output with custom message function', function(assert) {
     'custom message function is returned correctly'
   );
 });
+
+module('custom message builder', function(){
+  function customMessageBuilder(key, type, newValue, options) {
+    return `${key}_${type}_${!!newValue}_${JSON.stringify(options)}`;
+  }
+
+  test('it accepts an `on` option with custom message builder', function(assert) {
+    let changes = { password: '1234567' };
+    let key = 'passwordConfirmation';
+    let opts = { on: 'password' };
+    let validator = validateConfirmation(opts);
+
+    assert.equal(validator(key, undefined, undefined, changes, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'confirmation', null, opts));
+    assert.equal(validator(key, null, undefined, changes, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'confirmation', null, opts));
+    assert.equal(validator(key, '', undefined, changes, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'confirmation', null, opts));
+    assert.equal(validator(key, '1234567', undefined, changes, {buildMessage: customMessageBuilder}), true);
+  });
+});

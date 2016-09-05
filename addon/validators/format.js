@@ -18,7 +18,7 @@ export default function validateFormat(options = {}) {
 
   assert('inverse options should be a boolean', typeOf(inverse) === 'boolean');
 
-  return (key, value) => {
+  return (key, value, _, __, validatorOptions = {}) => {
     if (allowBlank && isEmpty(value)) {
       return true;
     }
@@ -27,11 +27,12 @@ export default function validateFormat(options = {}) {
       regex = regularExpressions[type];
     }
 
+    const _buildMessage = validatorOptions.buildMessage ? validatorOptions.buildMessage : buildMessage;
     if (regex && (regex.test(value) === inverse)) {
       if (type && !inverse) {
-        return buildMessage(key, type, value, options);
+        return _buildMessage(key, type, value, options);
       }
-      return buildMessage(key, 'invalid', value, options);
+      return _buildMessage(key, 'invalid', value, options);
     }
 
     return true;

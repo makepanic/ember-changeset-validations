@@ -71,3 +71,52 @@ test('it can output a custom message function', function(assert) {
 
   assert.equal(validator(key, 'test'), 'some test message', 'custom message function is returned correctly');
 });
+
+module('custom message builder', function() {
+  function customMessageBuilder(key, type, newValue, options) {
+    return `${key}_${type}_${!!newValue}_${JSON.stringify(options)}`;
+  }
+
+  test('it accepts a `true` option', function(assert) {
+    let key = 'firstName';
+    let validator = validatePresence(true);
+
+    assert.equal(validator(key, undefined, undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'present', false, {}));
+    assert.equal(validator(key, null, undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'present', false, {}));
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'present', false, {}));
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it accepts a `false` option', function(assert) {
+    let key = 'firstName';
+    let validator = validatePresence(false);
+
+    assert.equal(validator(key, undefined, undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, null, undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'blank', true, {}));
+  });
+
+  test('it accepts a true `presence` option', function(assert) {
+    let key = 'firstName';
+    const options = { presence: true };
+    let validator = validatePresence(options);
+
+    assert.equal(validator(key, undefined, undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'present', false, options));
+    assert.equal(validator(key, null, undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'present', false, options));
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'present', false, options));
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it accepts a false `presence` option', function(assert) {
+    let key = 'firstName';
+    const options = { presence: false };
+    let validator = validatePresence(options);
+
+    assert.equal(validator(key, undefined, undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, null, undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'a', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'blank', true, options));
+  });
+
+});

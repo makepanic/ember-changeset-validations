@@ -17,31 +17,33 @@ const {
 export default function validateLength(options = {}) {
   let { allowBlank, is, min, max } = options;
 
-  return (key, value) => {
+  return (key, value, _, __, validatorOptions = {}) => {
     if (allowBlank && isEmpty(value)) {
       return true;
     }
 
+    const _buildMessage = validatorOptions.buildMessage ? validatorOptions.buildMessage : buildMessage;
+
     if (isNone(value)) {
-      return buildMessage(key, 'invalid', value, options);
+      return _buildMessage(key, 'invalid', value, options);
     }
 
     let length = get(value, 'length');
 
     if (isPresent(is) && typeOf(is) === 'number') {
-      return length === is || buildMessage(key, 'wrongLength', value, options);
+      return length === is || _buildMessage(key, 'wrongLength', value, options);
     }
 
     if (isPresent(min) && isPresent(max)) {
-      return (length >= min && length <= max) || buildMessage(key, 'between', value, options);
+      return (length >= min && length <= max) || _buildMessage(key, 'between', value, options);
     }
 
     if (isPresent(min) && isEmpty(max)) {
-      return length >= min || buildMessage(key, 'tooShort', value, options);
+      return length >= min || _buildMessage(key, 'tooShort', value, options);
     }
 
     if (isPresent(max) && isEmpty(min)) {
-      return length <= max || buildMessage(key, 'tooLong', value, options);
+      return length <= max || _buildMessage(key, 'tooLong', value, options);
     }
 
     return true;

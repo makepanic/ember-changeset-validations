@@ -11,9 +11,11 @@ const { typeOf } = Ember;
 export default function validateInclusion(options = {}) {
   let { list, range } = options;
 
-  return (key, value) => {
+  return (key, value, _, __, validatorOptions = {}) => {
+    const _buildMessage = validatorOptions.buildMessage ? validatorOptions.buildMessage : buildMessage;
+
     if (list && list.indexOf(value) === -1) {
-      return buildMessage(key, 'inclusion', value, options);
+      return _buildMessage(key, 'inclusion', value, options);
     }
 
     if (range && range.length === 2) {
@@ -21,7 +23,7 @@ export default function validateInclusion(options = {}) {
       let equalType = typeOf(value) === typeOf(min) && typeOf(value) === typeOf(max);
 
       if (!equalType || min > value || value > max) {
-        return buildMessage(key, 'inclusion', value, options);
+        return _buildMessage(key, 'inclusion', value, options);
       }
     }
 

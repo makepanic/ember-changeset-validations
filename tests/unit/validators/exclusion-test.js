@@ -50,3 +50,29 @@ test('it can output custom message function', function(assert) {
 
   assert.equal(validator(key, 'Test'), 'some test message', 'custom message function is returned correctly');
 });
+
+module('custom message builder', function(){
+  function customMessageBuilder(key, type, newValue, options) {
+    return `${key}_${type}_${!!newValue}_${JSON.stringify(options)}`;
+  }
+
+  test('it accepts a `list` option', function(assert) {
+    let key = 'title';
+    let options = { list: ['Manager', 'VP', 'Director'] };
+    let validator = validateExclusion(options);
+
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'Executive', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 'Manager', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'exclusion', 'Manager', options));
+  });
+
+  test('it accepts a `range` option', function(assert) {
+    let key = 'age';
+    let options = { range: [18, 60] };
+    let validator = validateExclusion(options);
+
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 61, undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, 21, undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'exclusion', 21, options));
+  });
+});

@@ -10,8 +10,10 @@ const {
 export default function validateConfirmation(options = {}) {
   let { on } = options;
 
-  return (key, newValue, _oldValue, changes/*, _content*/) => {
+  return (key, newValue, _oldValue, changes, validatorOptions = {}) => {
+    const _buildMessage = validatorOptions.buildMessage ? validatorOptions.buildMessage : buildMessage;
+
     return isPresent(newValue) && isEqual(get(changes, on), newValue) ||
-      buildMessage(key, 'confirmation', newValue, options);
+      _buildMessage(key, 'confirmation', newValue, options);
   };
 }

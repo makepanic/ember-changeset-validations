@@ -152,3 +152,122 @@ test('it can output custom message function', function(assert) {
 
   assert.equal(validator(key, 33), 'some test message', 'custom message function is returned correctly');
 });
+
+module('custom message builder', function() {
+  function customMessageBuilder(key, type, newValue, options) {
+    return `${key}_${type}_${!!newValue}_${JSON.stringify(options)}`;
+  }
+
+  test('it accepts an `allowBlank` option', function(assert) {
+    let key = 'age';
+    let options = { allowBlank: true };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '6', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it rejects non-numbers', function(assert) {
+    let key = 'age';
+    let options = {};
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, 'not a number', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'notANumber', 'not a number', options));
+    assert.equal(validator(key, '7', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it rejects empty strings', function(assert) {
+    let key = 'age';
+    let options = {};
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'notANumber', false, options));
+    assert.equal(validator(key, '7', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it accepts an `integer` option', function(assert) {
+    let key = 'age';
+    let options = { integer: true };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '8.5', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'notAnInteger', '8.5', options));
+    assert.equal(validator(key, '7', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it accepts an `is` option', function(assert) {
+    let key = 'age';
+    let options = { is: 12 };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '8.5', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'equalTo', '8.5', options));
+    assert.equal(validator(key, '12', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it accepts a `lt` option', function(assert) {
+    let key = 'age';
+    let options = { lt: 12 };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '15', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'lessThan', '15', options));
+    assert.equal(validator(key, '12', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'lessThan', '12', options));
+    assert.equal(validator(key, '4', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it accepts a `lte` option', function(assert) {
+    let key = 'age';
+    let options = { lte: 12 };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '15', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'lessThanOrEqualTo', '15', options));
+    assert.equal(validator(key, '12', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '4', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+  test('it accepts a `gt` option', function(assert) {
+    let key = 'age';
+    let options = { gt: 12 };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '15', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '12', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'greaterThan', '12', options));
+    assert.equal(validator(key, '4', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'greaterThan', '4', options));
+  });
+
+  test('it accepts a `gte` option', function(assert) {
+    let key = 'age';
+    let options = { gte: 12 };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '15', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '12', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '4', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'greaterThanOrEqualTo', '4', options));
+  });
+
+  test('it accepts a `positive` option', function(assert) {
+    let key = 'age';
+    let options = { positive: true };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '15', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '-12', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'positive', '-12', options));
+  });
+
+  test('it accepts an `odd` option', function(assert) {
+    let key = 'age';
+    let options = { odd: true };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '15', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+    assert.equal(validator(key, '34', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'odd', '34', options));
+  });
+
+  test('it accepts an `even` option', function(assert) {
+    let key = 'age';
+    let options = { even: true };
+    let validator = validateNumber(options);
+
+    assert.equal(validator(key, '15', undefined, undefined, {buildMessage: customMessageBuilder}), customMessageBuilder(key, 'even', '15', options));
+    assert.equal(validator(key, '34', undefined, undefined, {buildMessage: customMessageBuilder}), true);
+  });
+
+});

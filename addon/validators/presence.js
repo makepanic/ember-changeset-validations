@@ -20,20 +20,26 @@ function _isPresent(value) {
   return isPresent(value);
 }
 
-function _testPresence(key, value, presence, context = {}) {
+function _testPresence(key, value, presence) {
   if (presence) {
-    return _isPresent(value) || buildMessage(key, 'present', value, context);
+    return _isPresent(value) || 'present';
   } else {
-    return isBlank(value) || buildMessage(key, 'blank', value, context);
+    return isBlank(value) || 'blank';
   }
 }
 
 export default function validatePresence(opts) {
-  return (key, value) => {
-    if (typeof opts === 'boolean') {
-      return _testPresence(key, value, opts);
-    }
+  return (key, value, _, __, validatorOptions = {}) => {
+    const _buildMessage = validatorOptions.buildMessage ? validatorOptions.buildMessage : buildMessage;
 
-    return _testPresence(key, value, opts.presence, opts);
+    const isBooleanOption = typeof opts === 'boolean';
+
+    const context = isBooleanOption ? {} : opts;
+    const presence = isBooleanOption ? opts : opts.presence;
+    const messageKey = _testPresence(key, value, presence, context);
+
+    return typeof messageKey === 'string' ?
+      _buildMessage(key, messageKey, value, context) :
+      messageKey;
   };
 }
